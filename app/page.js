@@ -61,6 +61,19 @@ export default function Home() {
             </ul>
           </div>
 
+          <div className="feature-preview-card privacy-card">
+            <h2 className="privacy-card-title">{t.privacy.title}</h2>
+            <ul className="privacy-list">
+              {t.privacy.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <a href="/privacy" className="privacy-link">
+            {t.privacy.linkText}
+          </a>
+
           <a href={STRAVA_URL} className="strava-button">
             {t.connectStrava}
           </a>

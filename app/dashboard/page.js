@@ -137,6 +137,9 @@ export default function DashboardPage() {
   const longestDistance = filteredActivities.length
     ? Math.max(...filteredActivities.map((activity) => Number(activity.distance || 0)))
     : 0;
+  const longestMovingTime = filteredActivities.length
+    ? Math.max(...filteredActivities.map((activity) => Number(activity.moving_time || 0)))
+    : 0;
 
   const sportBreakdown = filteredActivities.reduce((acc, activity) => {
     const sport = normalizeSport(activity.type);
@@ -220,14 +223,22 @@ export default function DashboardPage() {
 
               <div className="summary-item">
                 <p className="summary-label">{t.summary.longest}</p>
-                <h2 className="summary-value">{formatDistance(longestDistance)}</h2>
+                <h2 className="summary-value">
+                  {selectedSport === 'Workout' ? formatDuration(longestMovingTime) : formatDistance(longestDistance)}
+                </h2>
               </div>
 
               <div className="summary-divider" />
 
               <div className="summary-item">
-                <p className="summary-label">{t.summary.movingTime}</p>
-                <h2 className="summary-value">{formatDuration(totalMovingTime)}</h2>
+                <p className="summary-label">
+                  {selectedSport === 'Workout' ? t.summary.activityCount : t.summary.movingTime}
+                </p>
+                <h2 className="summary-value">
+                  {selectedSport === 'Workout'
+                    ? formatActivityCount(filteredActivities.length, language)
+                    : formatDuration(totalMovingTime)}
+                </h2>
               </div>
             </section>
 

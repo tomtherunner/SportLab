@@ -552,13 +552,27 @@ button {
   flex-shrink: 0;
 }
 
+.activity-name-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.activity-name-link:hover {
+  color: var(--accent);
+}
+
 .activity-name {
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 17px;
   font-weight: 700;
-  color: var(--text-main);
+  color: inherit;
 }
 
 .activity-meta {

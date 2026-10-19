@@ -22,6 +22,14 @@ const formatDuration = (seconds) => {
   return `${secs}s`;
 };
 
+const formatActivityCount = (count, locale) => {
+  if (locale === 'cs') {
+    return `${count} ${count === 1 ? 'aktivita' : 'aktivit'}`;
+  }
+
+  return `${count} ${count === 1 ? 'activity' : 'activities'}`;
+};
+
 const isWithinPeriod = (date, period) => {
   const now = new Date();
   const current = new Date(date);
@@ -132,7 +140,18 @@ export default function DashboardPage() {
 
   const sportBreakdown = filteredActivities.reduce((acc, activity) => {
     const sport = normalizeSport(activity.type);
-    acc[sport] = (acc[sport] || 0) + (activity.distance || 0);
+
+    if (!acc[sport]) {
+      acc[sport] = {
+        count: 0,
+        totalDistance: 0,
+        totalMovingTime: 0,
+      };
+    }
+
+    acc[sport].count += 1;
+    acc[sport].totalDistance += Number(activity.distance || 0);
+    acc[sport].totalMovingTime += Number(activity.moving_time || 0);
     return acc;
   }, {});
 
@@ -150,7 +169,8 @@ export default function DashboardPage() {
     Ride: '#3b82f6',
     Walk: '#22c55e',
     Hike: '#8b5cf6',
-    Swim: '#14b8a6',
+    Swimming: '#14b8a6',
+    Skiing: '#38bdf8',
     Workout: '#a855f7',
     Other: '#8a8a90',
   };
@@ -191,7 +211,9 @@ export default function DashboardPage() {
             <section className="summary-section">
               <div className="summary-item">
                 <p className="summary-label">{activeSportLabel}</p>
-                <h2 className="summary-value">{formatDistance(totalDistance)}</h2>
+                <h2 className="summary-value">
+                  {selectedSport === 'Workout' ? formatDuration(totalMovingTime) : formatDistance(totalDistance)}
+                </h2>
               </div>
 
               <div className="summary-divider" />
@@ -256,6 +278,8 @@ export default function DashboardPage() {
                   renderedActivities.map((activity, index) => {
                     const sportKey = normalizeSport(activity.type);
                     const activityDotColor = sportDotColors[sportKey] || sportDotColors.Other;
+                    const shouldShowDistance = Number(activity.distance || 0) > 0;
+                    const activityUrl = `https://www.strava.com/activities/${activity.id}`;
 
                     return (
                       <div key={activity.id}>
@@ -263,7 +287,16 @@ export default function DashboardPage() {
                           <div className="activity-main">
                             <div className="activity-title-wrap">
                               <span className="activity-dot" style={{ backgroundColor: activityDotColor }} />
-                              <p className="activity-name">{activity.name}</p>
+                              <a
+                                className="activity-name-link"
+                                href={activityUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`${activity.name} (opens in Strava)`}
+                              >
+                                <span className="activity-name">{activity.name}</span>
+                                <span aria-hidden="true">↗</span>
+                              </a>
                             </div>
                             <p className="activity-meta">
                               {new Date(activity.start_date).toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US')} · {formatSportName(sportKey, language)}
@@ -271,7 +304,7 @@ export default function DashboardPage() {
                           </div>
 
                           <div className="activity-side">
-                            <p className="activity-distance">{formatDistance(activity.distance)}</p>
+                            {shouldShowDistance && <p className="activity-distance">{formatDistance(activity.distance)}</p>}
                             <p className="activity-duration">{formatDuration(activity.moving_time)}</p>
                           </div>
                         </div>
@@ -290,12 +323,16 @@ export default function DashboardPage() {
               <div className="breakdown-card">
                 {Object.entries(sportBreakdown).length > 0 ? (
                   Object.entries(sportBreakdown)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([sport, distance], index, arr) => (
+                    .sort(([, a], [, b]) => b.totalDistance - a.totalDistance)
+                    .map(([sport, metrics], index, arr) => (
                       <div key={sport}>
                         <div className="breakdown-row">
                           <span className="breakdown-label">{formatSportName(sport, language)}</span>
-                          <span className="breakdown-value">{formatDistance(distance)}</span>
+                          <span className="breakdown-value">
+                            {sport === 'Workout'
+                              ? `${formatActivityCount(metrics.count, language)} • ${formatDuration(metrics.totalMovingTime)}`
+                              : formatDistance(metrics.totalDistance)}
+                          </span>
                         </div>
 
                         {index < arr.length - 1 && <div className="breakdown-divider" />}
